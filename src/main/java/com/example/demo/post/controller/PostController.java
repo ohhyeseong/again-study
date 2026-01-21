@@ -30,14 +30,16 @@ public class PostController {
     private final PostService postService;
     private final UserRepository userRepository;
 
+    // 게시글 생성
     @PostMapping("/create")
-    public ResponseEntity<ApiResponse<Long>> createPost(@Valid @RequestBody PostCreateDto dto,
+    public ResponseEntity<ApiResponse<PostResponse>> createPost(@Valid @RequestBody PostCreateDto dto,
                                                         @AuthenticationPrincipal CustomUserDetails userDetails) throws IOException {
         User user = getUser(userDetails);
-        Long postId = postService.create(dto,user);
+        PostResponse postId = postService.create(dto,user);
         return ResponseEntity.ok(ApiResponse.ok(postId));
     }
 
+    // 게시글 전체 조회(페이징)
     @GetMapping
     public ResponseEntity<ApiResponse<Page<PostResponse>>> getAllPosts(
             @RequestParam(required = false) String keyword,
@@ -47,12 +49,14 @@ public class PostController {
         return ResponseEntity.ok(ApiResponse.ok(responsePage));
     }
 
+    // 게시글 단건 조회(특정아이디 조회)
     @GetMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponse>>getPost(@PathVariable Long postId){
         PostResponse response = postService.getById(postId);
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    // 게시글 수정
     @PutMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponse>>updatePost(@PathVariable Long postId,
                                                                @Valid @RequestBody PostUpdateDto dto,
@@ -64,6 +68,7 @@ public class PostController {
 
     }
 
+    // 게시글 삭제
     @DeleteMapping("/{postId}")
     public ResponseEntity<ApiResponse<Void>> deletePost(@PathVariable Long postId,
                                                         @AuthenticationPrincipal CustomUserDetails userDetails){

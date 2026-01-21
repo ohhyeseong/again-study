@@ -41,4 +41,8 @@ public class User {
         this.role = role;
     }
 
+    public void update(String nickname){
+        this.nickname = nickname;
+    }
+
 }

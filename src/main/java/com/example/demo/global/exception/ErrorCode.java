@@ -8,7 +8,11 @@ public enum ErrorCode {
 
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "요청 값이 올바르지 않습니다.!"),
 
-    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "사용자 권한이 없습니다."),
+    // 403
+    FORBIDDEN(HttpStatus.FORBIDDEN, "사용자 권한이 없습니다."),
+
+    //401
+    UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "인증 권한이 없습니다.(로그인을 진행해주세요)"),
 
     // 409
     CONFLICT_USERNAME(HttpStatus.CONFLICT, "중복된 값이 있습니다."),

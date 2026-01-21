@@ -4,7 +4,9 @@ import com.example.demo.global.exception.CustomException;
 import com.example.demo.global.exception.ErrorCode;
 import com.example.demo.user.domain.User;
 import com.example.demo.user.domain.UserRole;
+import com.example.demo.user.dto.UserResponse;
 import com.example.demo.user.dto.UserSignupDto;
+import com.example.demo.user.dto.UserUpdateRequestDto;
 import com.example.demo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +22,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public Long signup(UserSignupDto dto) {
+    public UserResponse signup(UserSignupDto dto) {
 
         if(userRepository.existsByUsername(dto.username())) {
             throw new CustomException(ErrorCode.CONFLICT_USERNAME);
@@ -36,6 +38,27 @@ public class UserService {
                 .role(UserRole.USER)
                 .build();
 
-        return userRepository.save(user).getId();
+        User savedUser = userRepository.save(user);
+
+        return UserResponse.from(savedUser);
+    }
+
+    public UserResponse findMyPage(Long userId){
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        return UserResponse.from(user);
+    }
+
+    @Transactional
+    public UserResponse update(Long userId, UserUpdateRequestDto dto){
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        user.update(dto.nickname());
+
+        return UserResponse.from(user);
     }
 }

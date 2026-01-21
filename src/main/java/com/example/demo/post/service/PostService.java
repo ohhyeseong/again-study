@@ -24,14 +24,16 @@ public class PostService {
     private final PostRepository postRepository;
 
     @Transactional
-    public Long create(PostCreateDto dto, User user) throws IOException {
+    public PostResponse create(PostCreateDto dto, User user) throws IOException {
         Post post = Post.builder()
                 .title(dto.title())
                 .content(dto.content())
                 .user(user)
                 .build();
 
-        return postRepository.save(post).getId();
+        Post postResponse = postRepository.save(post);
+
+        return PostResponse.from(postResponse);
     }
 
     public PostResponse getById(Long postId){
