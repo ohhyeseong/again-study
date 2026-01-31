@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+</head>
+<body>
+<h2>Chat Room</h2>
+<div>
+    <label>Room ID:</label> <input type="text" id="roomId" value="1"><br>
+    <label>Sender:</label> <input type="text" id="sender" value="User1"><br>
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+</div>
+<br>
+<div>
+    <input type="text" id="message" placeholder="Message">
+    <button onclick="sendMessage()">Send</button>
+</div>
+<ul id="messages"></ul>
+
+<script>
+    var stompClient = null;
+
+    function connect() {
+        var socket = new SockJS('/ws-stomp');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            console.log('Connected: ' + frame);
+            var roomId = document.getElementById("roomId").value;
+
+            // 구독 (Subscribe)
+            stompClient.subscribe('/sub/chat/room/' + roomId, function (message) {
+                showMessage(JSON.parse(message.body));
+            });
+        });
+    }
+
+    function disconnect() {
+        if (stompClient !== null) {
+            stompClient.disconnect();
+        }
+        console.log("Disconnected");
+    }
+
+    function sendMessage() {
+        var roomId = document.getElementById("roomId").value;
+        var sender = document.getElementById("sender").value;
+        var message = document.getElementById("message").value;
+
+        // 발행 (Publish)
+        stompClient.send("/pub/chat/message", {}, JSON.stringify({
+            'roomId': roomId,
+            'sender': sender,
+            'message': message
+        }));
+    }
+
+    function showMessage(message) {
+        var ul = document.getElementById("messages");
+        var li = document.createElement("li");
+        li.appendChild(document.createTextNode(message.sender + ": " + message.message));
+        ul.appendChild(li);
+    }
+</script>
+</body>
+</html>

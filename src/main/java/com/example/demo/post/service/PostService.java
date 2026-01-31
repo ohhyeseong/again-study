@@ -45,7 +45,7 @@ public class PostService {
     public Page<PostResponse> getAll(String keyword,Pageable pageable){
         Page<Post> posts;
         if(keyword == null || keyword.isBlank()) {
-            posts = postRepository.findAll(pageable);
+            posts = postRepository.findAllWithUser(pageable);
         } else {
             posts = postRepository.findByTitleContaining(keyword,pageable);
         }

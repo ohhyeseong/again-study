@@ -39,7 +39,6 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
-    @BatchSize(size = 100)
     @OneToMany(mappedBy = "parent", orphanRemoval = true) // 내 자식들은 누구인가? (여러 명)
     private List<Comment> children = new ArrayList<>();
 
