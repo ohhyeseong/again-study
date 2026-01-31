@@ -2,8 +2,10 @@ package com.example.demo.user.service;
 
 import com.example.demo.global.exception.CustomException;
 import com.example.demo.global.exception.ErrorCode;
+import com.example.demo.global.jwt.JwtTokenProvider;
 import com.example.demo.user.domain.User;
 import com.example.demo.user.domain.UserRole;
+import com.example.demo.user.dto.LoginRequest;
 import com.example.demo.user.dto.UserResponse;
 import com.example.demo.user.dto.UserSignupDto;
 import com.example.demo.user.dto.UserUpdateRequestDto;
@@ -20,6 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     public UserResponse signup(UserSignupDto dto) {
@@ -41,6 +44,20 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         return UserResponse.from(savedUser);
+    }
+
+    public String login(LoginRequest dto) {
+        // 1. 유저 확인
+        User user = userRepository.findByUsername(dto.username())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(dto.password(), user.getPassword())) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        // 3. 토큰 생성 빙 반환
+        // user.getRole().name()은 "ROLE_USER" 같은 문자열이어야 합니다.
+        return jwtTokenProvider.createToken(user.getUsername(), user.getRole().name());
     }
 
     public UserResponse findMyPage(Long userId){

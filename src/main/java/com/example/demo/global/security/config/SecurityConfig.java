@@ -1,18 +1,28 @@
 package com.example.demo.global.security.config;
 
+import com.example.demo.global.jwt.JwtAuthenticationFilter;
+import com.example.demo.global.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsService userDetailsService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -24,35 +34,26 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .httpBasic(httpBasic -> httpBasic.disable())
-                .formLogin(formLogin -> formLogin
-                        .loginProcessingUrl("/api/users/login")
-                        .usernameParameter("username")
-                        .passwordParameter("password")
-                        .successHandler((request, response, authentication) ->
-                                {response.setStatus(HttpServletResponse.SC_ACCEPTED);
-                                response.setContentType("application/json;charset=UTF-8");
-                                response.getWriter().write("{\"message\": \"로그인 성공\"}");}
-                        )
-                        .failureHandler((request, response, exception) ->
-                            {response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"message\": \"로그인 실패 아이디 또는 비밀번호를 확인하세요\"}");})
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/api/users/logout")
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(HttpServletResponse.SC_OK);
-                            response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"message\": \"로그아웃 성공\"}");
-                        })
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true)
-                        .deleteCookies("JSESSIONID"))
+                .formLogin(formLogin -> formLogin.disable())
+
+                // "서버야, 이제 세션 만들지 마. 우린 토큰 쓸 거야."
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/users/**").permitAll()
+                        // 로그인, 회원가입은 누구나 접근 가능
+                        .requestMatchers("/api/users/login", "/api/users/signup").permitAll()
+                        // Swagger나 H2 Console 등 필요한 경로 허용
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/","css/**","js/**","index").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated());
+                        .anyRequest().authenticated()
+                )
+
+                // JWT 필터 끼워 넣기
+                //"UsernamePasswordAuthenticationFilter(기본 로그인 필터)보다 먼저 실행해라!"
+                //"로그인 검사하기 전에, 먼저 토큰 검사부터 해!"
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService),
+                        UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
 

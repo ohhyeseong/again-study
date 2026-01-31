@@ -26,3 +26,10 @@ spring:
         show_sql: true
         format_sql: false
         highlight_sql: true
+
+security:
+  jwt:
+    token:
+      # 임의의 문자열 (Base64로 인코딩된 값이면 좋지만, 그냥 긴 영어+숫자 조합도 됩니다)
+      secret-key: "mySecretKeyIsVeryVeryLongAndSecureSoNoOneCanGuessIt"
+      expire-length: 3600000 # 1시간 (밀리초)
