@@ -1,0 +1,6 @@
+package com.example.demo.user.dto;
+
+public record RefreshTokenRequestDto(
+        String refreshToken
+) {
+}

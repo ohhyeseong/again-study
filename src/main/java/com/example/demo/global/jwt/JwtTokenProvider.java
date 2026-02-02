@@ -40,6 +40,21 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    // Refresh Token 생성 ( 유효기간 : 3일 )
+    public String createRefreshToken(String username) {
+        Date now = new Date();
+        // 3일 = 259200000 밀리초
+        long refreshTokenValidity = 259200000;
+        Date validity = new Date(now.getTime() + refreshTokenValidity);
+
+        return Jwts.builder()
+                .setSubject(username) // 사용자 식별값만 저장
+                .setIssuedAt(now)
+                .setExpiration(validity)
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     // 2. 토큰에서 유저 이름(username) 추출
     public String getUsername(String token) {
         return Jwts.parserBuilder()
