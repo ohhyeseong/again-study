@@ -10,6 +10,7 @@ import com.example.demo.user.domain.UserRole;
 import com.example.demo.user.dto.*;
 import com.example.demo.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional
     public UserResponse signup(UserSignupDto dto) {
@@ -115,4 +117,6 @@ public class UserService {
         // 5. 새 토큰 반환
         return new TokenDto(newAccessToken, newRefreshToken);
     }
+
+
 }
