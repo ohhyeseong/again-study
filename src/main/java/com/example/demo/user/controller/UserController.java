@@ -67,11 +67,11 @@ public class UserController {
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity<ApiResponse<String>> reissue(@RequestBody RefreshTokenRequestDto dto) {
-        String newAccessToken = userService.reissue(dto);
+    public ResponseEntity<ApiResponse<TokenDto>> reissue(@RequestBody RefreshTokenRequestDto dto) {
+        TokenDto tokenDto = userService.reissue(dto);
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + newAccessToken)
-                .body(ApiResponse.ok("토큰 재발급 성공"));
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + tokenDto.accessToken())
+                .body(ApiResponse.ok(tokenDto));
     }
 }

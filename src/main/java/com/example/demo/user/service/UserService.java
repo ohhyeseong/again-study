@@ -88,7 +88,7 @@ public class UserService {
 
     // refreshToken 확인 후 accessToken 재발급
     @Transactional
-    public String reissue(RefreshTokenRequestDto dto) { // 반환 타입을 String으로 변경
+    public TokenDto reissue(RefreshTokenRequestDto dto) { // 반환 타입을 String으로 변경
 
         // 1. Refresh Token 검증
         String refreshTokenValue = dto.refreshToken();
@@ -104,10 +104,15 @@ public class UserService {
         User user = userRepository.findByUsername(refreshToken.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
+        refreshTokenRepository.delete(refreshToken);
+
         // 4. 새로운 Access Token 생성
         String newAccessToken = jwtTokenProvider.createToken(user.getUsername(), user.getRole().name());
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getUsername());
+
+        refreshTokenRepository.save(new RefreshToken(user.getUsername(), newRefreshToken));
 
         // 5. 새 토큰 반환
-        return newAccessToken;
+        return new TokenDto(newAccessToken, newRefreshToken);
     }
 }
