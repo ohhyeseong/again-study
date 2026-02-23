@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8" />
+    <script src="https://js.tosspayments.com/v2/standard"></script>
+</head>
+<body>
+<!-- 할인 쿠폰 -->
+<div>
+    <input type="checkbox" id="coupon-box" />
+    <label for="coupon-box"> 5,000원 쿠폰 적용 </label>
+</div>
+<!-- 결제 UI -->
+<div id="payment-method"></div>
+<!-- 이용약관 UI -->
+<div id="agreement"></div>
+<!-- 결제하기 버튼 -->
+<button class="button" id="payment-button" style="margin-top: 30px">결제하기</button>
+
+<script>
+    main();
+
+    async function main() {
+        const button = document.getElementById("payment-button");
+        const coupon = document.getElementById("coupon-box");
+        // ------  결제위젯 초기화 ------
+        const clientKey = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+        const tossPayments = TossPayments(clientKey);
+        // 회원 결제
+        const customerKey = "WWTxt_myQYlAMNEnOr7g8";
+        const widgets = tossPayments.widgets({
+            customerKey,
+        });
+        // 비회원 결제
+        // const widgets = tossPayments.widgets({ customerKey: TossPayments.ANONYMOUS });
+
+        // ------ 주문의 결제 금액 설정 ------
+        await widgets.setAmount({
+            currency: "KRW",
+            value: 50000,
+        });
+
+        await Promise.all([
+            // ------  결제 UI 렌더링 ------
+            widgets.renderPaymentMethods({
+                selector: "#payment-method",
+                variantKey: "DEFAULT",
+            }),
+            // ------  이용약관 UI 렌더링 ------
+            widgets.renderAgreement({ selector: "#agreement", variantKey: "AGREEMENT" }),
+        ]);
+
+        // ------  주문서의 결제 금액이 변경되었을 경우 결제 금액 업데이트 ------
+        coupon.addEventListener("change", async function () {
+            if (coupon.checked) {
+                await widgets.setAmount({
+                    currency: "KRW",
+                    value: 50000 - 5000,
+                });
+
+                return;
+            }
+
+            await widgets.setAmount({
+                currency: "KRW",
+                value: 50000,
+            });
+        });
+
+        // ------ '결제하기' 버튼 누르면 결제창 띄우기 ------
+        button.addEventListener("click", async function () {
+            const selectedProductId = 1;
+            // 1. [추가] 우리 서버에 결제 준비 요청
+            // productId는 현재 페이지의 상품 번호를 가져오도록 설정
+            const response = await fetch(`/api/v1/payments/prepare?productId=${selectedProductId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('token'), // JWT 토큰
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                alert("결제 준비 중 오류가 발생했습니다.");
+                return;
+            }
+
+            const data = await response.json(); // 서버에서 준 orderId, amount, name 등
+
+            // 2. [수정] 서버에서 받은 데이터로 결제 요청
+            await widgets.requestPayment({
+                orderId: data.orderId,             // 서버가 생성한 UUID
+                orderName: data.productName,       // 서버의 상품명
+                successUrl: window.location.origin + "/success.html",
+                failUrl: window.location.origin + "/fail.html",
+                customerEmail: data.userEmail,     // 유저 이메일
+                customerName: data.userName,       // 유저 닉네임
+            });
+        });
+    }
+</script>
+</body>
+</html>

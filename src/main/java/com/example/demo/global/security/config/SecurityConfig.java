@@ -41,10 +41,10 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                         // 로그인, 회원가입은 누구나 접근 가능
-                        .requestMatchers("/api/users/login", "/api/users/signup","chat-test.html","chat.html").permitAll()
+                        .requestMatchers("/api/users/login", "/api/users/signup","chat-test.html","chat.html","/api/v1/payments/**","/api/v1/payments/prepare").permitAll()
                         // Swagger나 H2 Console 등 필요한 경로 허용
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/","css/**","js/**","index").permitAll()
+                        .requestMatchers("/","css/**","js/**","index","html/**","/checkout.html", "/success.html", "/fail.html").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
